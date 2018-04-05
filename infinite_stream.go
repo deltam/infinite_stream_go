@@ -1,7 +1,7 @@
 package infinite_stream_go
 
 type Stream struct {
-	car int
+	car interface{}
 	cdr func() Stream
 }
 
@@ -21,40 +21,40 @@ func force(fn func() Stream) Stream {
 	return fn()
 }
 
-func Cons(a int, b func() Stream) (cp Stream) {
+func Cons(a interface{}, b func() Stream) (cp Stream) {
 	cp.car = a
 	cp.cdr = delay(b)
 	return cp
 }
 
-func (cp Stream) Car() int {
-	return cp.car
+func (s Stream) Car() interface{} {
+	return s.car
 }
 
-func (cp Stream) Cdr() Stream {
-	return force(cp.cdr)
+func (s Stream) Cdr() Stream {
+	return force(s.cdr)
 }
 
-func (cp Stream) Ref(n int) int {
+func (s Stream) Ref(n int) interface{} {
 	if n == 0 {
-		return cp.Car()
+		return s.Car()
 	} else {
-		return cp.Cdr().Ref(n - 1)
+		return s.Cdr().Ref(n - 1)
 	}
 }
 
-func (cp Stream) Filter(pred func(int) bool) Stream {
-	if pred(cp.Car()) {
-		return Cons(cp.Car(),
+func (s Stream) Filter(pred func(interface{}) bool) Stream {
+	if pred(s.Car()) {
+		return Cons(s.Car(),
 			func() Stream {
-				return cp.Cdr().Filter(pred)
+				return s.Cdr().Filter(pred)
 			})
 	} else {
-		return cp.Cdr().Filter(pred)
+		return s.Cdr().Filter(pred)
 	}
 }
 
-func Iterate(fn func(int) int, init int) Stream {
+func Iterate(fn func(interface{}) interface{}, init interface{}) Stream {
 	return Cons(init, func() Stream {
 		return Iterate(fn, fn(init))
 	})

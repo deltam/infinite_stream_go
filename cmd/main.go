@@ -20,9 +20,12 @@ func integerStartFrom(n int) is.Stream {
 }
 
 // dで割り切れないことを判定する関数を返す
-func notDivisible(d int) func(int) bool {
-	return func(n int) bool {
-		return 0 != n%d
+func notDivisible(d int) func(interface{}) bool {
+	return func(param interface{}) bool {
+		if n, ok := param.(int); ok {
+			return 0 != n%d
+		}
+		return false
 	}
 }
 
@@ -31,9 +34,12 @@ func sieve(s is.Stream) is.Stream {
 	return is.Cons(
 		s.Car(),
 		func() is.Stream {
-			return sieve(
-				s.Cdr().Filter(notDivisible(s.Car())),
-			)
+			if d, ok := s.Car().(int); ok {
+				return sieve(
+					s.Cdr().Filter(notDivisible(d)),
+				)
+			}
+			return s
 		},
 	)
 }
@@ -57,6 +63,6 @@ func main() {
 	fmt.Println(primes.Ref(1000))
 
 	fmt.Println("natural numbers by Iterate")
-	ns2 := is.Iterate(func(n int) int { return n + 1 }, 1)
+	ns2 := is.IterateInt(func(n int) int { return n + 1 }, 1)
 	displayLine(ns2, 20)
 }
