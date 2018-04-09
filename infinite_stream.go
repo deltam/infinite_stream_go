@@ -1,61 +1,166 @@
 package infinite_stream_go
 
-type Stream struct {
-	car interface{}
-	cdr func() Stream
+type Stream interface {
+	Car() interface{}
+	Cdr() Stream
+	IsTail() bool
 }
 
-func delay(fn func() Stream) func() Stream {
+func Delay(fn func() Stream) func() Stream {
 	already_run := false
 	var ret Stream
 	return func() Stream {
 		if !already_run {
-			ret = force(fn)
+			ret = Force(fn)
 			already_run = true
 		}
 		return ret
 	}
 }
 
-func force(fn func() Stream) Stream {
-	return fn()
+func Force(f func() Stream) Stream {
+	return f()
 }
 
-func Cons(a interface{}, b func() Stream) (cp Stream) {
+type ConsPair struct {
+	car interface{}
+	cdr func() Stream
+}
+
+func Cons(a interface{}, b func() Stream) (cp ConsPair) {
 	cp.car = a
-	cp.cdr = delay(b)
+	cp.cdr = Delay(b)
 	return cp
 }
 
-func (s Stream) Car() interface{} {
-	return s.car
+func (cp ConsPair) Car() interface{} {
+	return cp.car
 }
 
-func (s Stream) Cdr() Stream {
-	return force(s.cdr)
+func (cp ConsPair) Cdr() Stream {
+	return Force(cp.cdr)
 }
 
-func (s Stream) Ref(n int) interface{} {
+func (cp ConsPair) IsTail() bool {
+	return false
+}
+
+type Tail struct {
+	// dummy
+}
+
+func (t Tail) Car() interface{} {
+	return nil
+}
+
+func (t Tail) Cdr() Stream {
+	return t
+}
+
+func (t Tail) IsTail() bool {
+	return true
+}
+
+func TailCdr() func() Stream {
+	return func() Stream {
+		return Tail{}
+	}
+}
+
+func Empty() Stream {
+	return Tail{}
+}
+
+///////////////////////////////////////////////////////////////
+// operators
+
+func Ref(n int, s Stream) interface{} {
 	if n == 0 {
 		return s.Car()
 	} else {
-		return s.Cdr().Ref(n - 1)
+		return Ref(n-1, s.Cdr())
 	}
 }
 
-func (s Stream) Filter(pred func(interface{}) bool) Stream {
-	if pred(s.Car()) {
-		return Cons(s.Car(),
-			func() Stream {
-				return s.Cdr().Filter(pred)
-			})
+func Take(n int, s Stream) Stream {
+	if 0 < n {
+		return Cons(s.Car(), func() Stream {
+			return Take(n-1, s.Cdr())
+		})
 	} else {
-		return s.Cdr().Filter(pred)
+		return Tail{}
 	}
 }
 
-func Iterate(fn func(interface{}) interface{}, init interface{}) Stream {
-	return Cons(init, func() Stream {
-		return Iterate(fn, fn(init))
+///////////////////////////////////////////////////////////////
+// transducer
+
+type Reducer func(interface{}, interface{}) interface{}
+type Transducer func(Reducer) Reducer
+
+func Reduce(fn Reducer, init interface{}, s Stream) interface{} {
+	if s.IsTail() {
+		return init
+	}
+	result := fn(init, s.Car())
+	return Reduce(fn, result, s.Cdr())
+}
+
+func Conj(s Stream, item interface{}) Stream {
+	if s.IsTail() {
+		return Cons(item, TailCdr())
+	}
+	return Cons(s.Car(), func() Stream {
+		return Conj(s.Cdr(), item)
 	})
+}
+
+func ConjReducer(result interface{}, input interface{}) interface{} {
+	if s, ok := result.(Stream); ok {
+		return Conj(s, input)
+	}
+	return nil
+}
+
+func Map(fn func(interface{}) interface{}) Transducer {
+	return func(reducing Reducer) Reducer {
+		return func(result interface{}, input interface{}) interface{} {
+			return reducing(result, fn(input))
+		}
+	}
+}
+
+func Filter(pred func(interface{}) bool) Transducer {
+	return func(reducing Reducer) Reducer {
+		return func(result interface{}, input interface{}) interface{} {
+			if pred(input) {
+				return reducing(result, input)
+			} else {
+				return result
+			}
+		}
+	}
+}
+
+func Comp(transducer ...Transducer) Transducer {
+	return func(reducing Reducer) Reducer {
+		comp := reducing
+		for i := len(transducer) - 1; i >= 0; i-- {
+			comp = transducer[i](comp)
+		}
+		return comp
+	}
+}
+
+func Transduce(tr Transducer, reducing Reducer, init interface{}, s Stream) interface{} {
+	return Reduce(tr(reducing), init, s)
+}
+
+func Sequence(tr Transducer, s Stream) Stream {
+	transduced := Transduce(tr, ConjReducer, Empty(), s)
+	if result, ok := transduced.(Stream); ok {
+		return result
+	} else {
+		return Empty()
+	}
 }
