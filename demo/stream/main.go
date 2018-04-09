@@ -15,7 +15,7 @@ func displayLine(s is.Stream, limit int) {
 			break
 		}
 	}
-	fmt.Println()
+	fmt.Print("\n\n")
 }
 
 func integerStartFrom(n int) is.Stream {
@@ -34,22 +34,25 @@ func notDivisible(d int) func(interface{}) bool {
 	}
 }
 
-/*
 // エラトステネスのふるい
 func sieve(s is.Stream) is.Stream {
+	if s.IsTail() {
+		return is.Tail{}
+	}
 	return is.Cons(
 		s.Car(),
 		func() is.Stream {
 			if d, ok := s.Car().(int); ok {
 				return sieve(
-					s.Cdr().Filter(notDivisible(d)),
-				)
+					is.Sequence(
+						is.Filter(notDivisible(d)),
+						s.Cdr()))
 			}
-			return s
+			return is.Tail{}
 		},
 	)
 }
-*/
+
 func main() {
 	fmt.Println("natural numbers")
 	ns := integerStartFrom(1)
@@ -58,19 +61,13 @@ func main() {
 	fmt.Println(is.Ref(100, ns))
 	displayLine(ns, 20)
 
-	/*
-		fmt.Println("no sevens")
-		noSevens := ns.Filter(notDivisible(7))
-		displayLine(noSevens, 20)
+	fmt.Println("no sevens")
+	noSevens := is.Sequence(is.Filter(notDivisible(7)), is.Take(30, ns))
+	displayLine(noSevens, 20)
 
-		fmt.Println("primes")
-		nsFrom2 := ns.Cdr()
-		primes := sieve(nsFrom2)
-		displayLine(primes, 20)
-		fmt.Println(primes.Ref(1000))
-
-		fmt.Println("natural numbers by Iterate")
-		ns2 := is.IterateInt(func(n int) int { return n + 1 }, 1)
-		displayLine(ns2, 20)
-	*/
+	fmt.Println("primes")
+	nsFrom2 := integerStartFrom(2)
+	primes := sieve(nsFrom2)
+	displayLine(primes, 20)
+	fmt.Printf("prime 1000th: %d\n", is.Ref(1000, primes))
 }

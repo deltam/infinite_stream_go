@@ -15,7 +15,7 @@ func displayLine(s is.Stream, limit int) {
 			break
 		}
 	}
-	fmt.Println()
+	fmt.Print("\n\n")
 }
 
 func integerStartFrom(n int) is.Stream {
@@ -118,6 +118,7 @@ func main() {
 	fmt.Printf("xform 1 -> %v\n", v1)
 	v2 := xform1(is.ConjReducer)(is.Empty(), 2)
 	fmt.Printf("xform 2 -> %v\n", v2)
+	fmt.Println()
 
 	fmt.Println("transduce filter even -> map inc")
 	xform2 := is.Comp(
