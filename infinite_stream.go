@@ -74,6 +74,16 @@ func Empty() Stream {
 ///////////////////////////////////////////////////////////////
 // operators
 
+func From(items ...interface{}) Stream {
+	if len(items) == 0 {
+		return Tail{}
+	} else {
+		return Cons(items[0], func() Stream {
+			return From(items[1:]...)
+		})
+	}
+}
+
 func Ref(n int, s Stream) interface{} {
 	if n == 0 {
 		return s.Car()

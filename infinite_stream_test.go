@@ -26,6 +26,22 @@ func TestStream_Cdr(t *testing.T) {
 	}
 }
 
+func TestFrom(t *testing.T) {
+	s := From(1, 2, 3)
+	if s.Car() != 1 {
+		t.Errorf("s.Car() = %v, want 1", s.Car())
+	}
+	if s.Cdr().Car() != 2 {
+		t.Errorf("s.Cdr().Car() = %v, want 2", s.Cdr().Car())
+	}
+	if s.Cdr().Cdr().Car() != 3 {
+		t.Errorf("s.Cdr().Cdr().Car() = %v, want 3", s.Cdr().Cdr().Car())
+	}
+	if s.Cdr().Cdr().Cdr().IsTail() != true {
+		t.Error("s.Cdr().Cdr().Cdr().IsTail() is false, want true")
+	}
+}
+
 func TestRef(t *testing.T) {
 	ns := integerStartFrom(1)
 	if Ref(0, ns) != 1 {
