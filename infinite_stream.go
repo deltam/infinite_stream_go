@@ -171,10 +171,17 @@ func Sequence(tr Transducer, s Stream) Stream {
 		return Tail{}
 	}
 
-	v := tr(ConjReducer)(Empty(), s.Car())
-	if cp, ok := v.(Stream); ok && !cp.IsTail() {
+	isChanged := false
+	var val interface{}
+	tr(func(_ interface{}, input interface{}) interface{} {
+		val = input
+		isChanged = true
+		return nil
+	})(nil, s.Car())
+
+	if isChanged {
 		return Cons(
-			cp.Car(),
+			val,
 			func() Stream {
 				return Sequence(tr, s.Cdr())
 			})

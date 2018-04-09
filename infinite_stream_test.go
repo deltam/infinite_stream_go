@@ -103,3 +103,41 @@ func TestReduce(t *testing.T) {
 		t.Errorf("reduce value = %v, want 55", v)
 	}
 }
+
+func TestSequence(t *testing.T) {
+	ns := integerStartFrom(1)
+
+	// map
+	s1 := Sequence(Map(func(input interface{}) interface{} {
+		if n, ok := input.(int); ok {
+			return n * n
+		}
+		return input
+	}), ns)
+	if Ref(0, s1) != 1 {
+		t.Errorf("Ref(0, s1) = %v, want 1", Ref(0, s1))
+	}
+	if Ref(1, s1) != 2*2 {
+		t.Errorf("Ref(1, s1) = %v, want 4", Ref(1, s1))
+	}
+	if Ref(2, s1) != 3*3 {
+		t.Errorf("Ref(2, s1) = %v, want 4", Ref(2, s1))
+	}
+
+	// filter
+	s2 := Sequence(Filter(func(input interface{}) bool {
+		if n, ok := input.(int); ok {
+			return n%2 == 0
+		}
+		return false
+	}), ns)
+	if Ref(0, s2) != 2 {
+		t.Errorf("Ref(0, s2) = %v, want 2", Ref(0, s2))
+	}
+	if Ref(1, s2) != 4 {
+		t.Errorf("Ref(2, s2) = %v, want 4", Ref(1, s2))
+	}
+	if Ref(2, s2) != 6 {
+		t.Errorf("Ref(2, s2) = %v, want 6", Ref(2, s2))
+	}
+}
