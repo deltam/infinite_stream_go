@@ -167,10 +167,18 @@ func Transduce(tr Transducer, reducing Reducer, init interface{}, s Stream) inte
 }
 
 func Sequence(tr Transducer, s Stream) Stream {
-	transduced := Transduce(tr, ConjReducer, Empty(), s)
-	if result, ok := transduced.(Stream); ok {
-		return result
+	if s.IsTail() {
+		return Tail{}
+	}
+
+	v := tr(ConjReducer)(Empty(), s.Car())
+	if cp, ok := v.(Stream); ok && !cp.IsTail() {
+		return Cons(
+			cp.Car(),
+			func() Stream {
+				return Sequence(tr, s.Cdr())
+			})
 	} else {
-		return Empty()
+		return Sequence(tr, s.Cdr())
 	}
 }
