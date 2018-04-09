@@ -45,6 +45,36 @@ func isEven(input interface{}) bool {
 	return false
 }
 
+func twins(a interface{}) interface{} {
+	return is.From(a, a)
+}
+
+func mapcatting(fn func(interface{}) interface{}) is.Transducer {
+	return func(reducing is.Reducer) is.Reducer {
+		return func(result interface{}, input interface{}) interface{} {
+			v := fn(input)
+			if s, ok := v.(is.Stream); ok {
+				return is.Reduce(reducing, result, s)
+			} else {
+				return result
+			}
+		}
+	}
+}
+
+func taking(n int) is.Transducer {
+	return func(reducing is.Reducer) is.Reducer {
+		return func(result interface{}, input interface{}) interface{} {
+			if 0 < n {
+				n--
+				return reducing(result, input)
+			} else {
+				return result
+			}
+		}
+	}
+}
+
 func main() {
 	fmt.Println("natural numbers")
 	ns := integerStartFrom(1)
@@ -117,4 +147,18 @@ func main() {
 	)
 	sequenced := is.Sequence(xform3, is.Take(30, ns))
 	displayLine(sequenced, 20)
+
+	fmt.Println("mapcatting")
+	mapcat := is.Sequence(
+		mapcatting(twins),
+		is.From(10, 20, 30),
+	)
+	displayLine(mapcat, 20)
+
+	fmt.Println("taking")
+	taken := is.Sequence(
+		taking(3),
+		is.From(1, 2, 3, 4, 5),
+	)
+	displayLine(taken, 20)
 }
