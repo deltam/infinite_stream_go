@@ -102,6 +102,24 @@ func Take(n int, s Stream) Stream {
 	}
 }
 
+func Conj(s Stream, item interface{}) Stream {
+	if s.IsTail() {
+		return Cons(item, TailCdr())
+	}
+	return Cons(s.Car(), func() Stream {
+		return Conj(s.Cdr(), item)
+	})
+}
+
+func Concat(a Stream, b func() Stream) Stream {
+	if a.IsTail() {
+		return b()
+	}
+	return Cons(a.Car(), func() Stream {
+		return Concat(a.Cdr(), b)
+	})
+}
+
 ///////////////////////////////////////////////////////////////
 // transducer
 
@@ -114,15 +132,6 @@ func Reduce(fn Reducer, init interface{}, s Stream) interface{} {
 	}
 	result := fn(init, s.Car())
 	return Reduce(fn, result, s.Cdr())
-}
-
-func Conj(s Stream, item interface{}) Stream {
-	if s.IsTail() {
-		return Cons(item, TailCdr())
-	}
-	return Cons(s.Car(), func() Stream {
-		return Conj(s.Cdr(), item)
-	})
 }
 
 func ConjReducer(result interface{}, input interface{}) interface{} {

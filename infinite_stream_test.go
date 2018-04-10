@@ -84,6 +84,24 @@ func TestConj(t *testing.T) {
 	}
 }
 
+func TestConcat(t *testing.T) {
+	s1 := From(1, 2)
+	s2 := From(3, 4)
+	concated := Concat(s1, func() Stream { return s2 })
+	if Ref(0, concated) != 1 {
+		t.Errorf("Ref(0, concated) = %v, want 1", Ref(0, concated))
+	}
+	if Ref(1, concated) != 2 {
+		t.Errorf("Ref(1, concated) = %v, want 2", Ref(1, concated))
+	}
+	if Ref(2, concated) != 3 {
+		t.Errorf("Ref(2, concated) = %v, want 3", Ref(2, concated))
+	}
+	if Ref(3, concated) != 4 {
+		t.Errorf("Ref(3, concated) = %v, want 4", Ref(3, concated))
+	}
+}
+
 func TestReduce(t *testing.T) {
 	ns := integerStartFrom(1)
 	ten := Take(10, ns)
