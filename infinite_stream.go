@@ -175,21 +175,27 @@ func Transduce(tr Transducer, reducing Reducer, init interface{}, s Stream) inte
 	return Reduce(tr(reducing), init, s)
 }
 
+func Step(tr Transducer, input interface{}) (Stream, bool) {
+	v := tr(ConjReducer)(Empty(), input)
+
+	if s, ok := v.(Stream); ok {
+		if s.IsTail() {
+			return Empty(), false
+		} else {
+			return s, true
+		}
+	} else {
+		return Empty(), false
+	}
+}
+
 func Sequence(tr Transducer, s Stream) Stream {
 	if s.IsTail() {
 		return Tail{}
 	}
 
-	isChanged := false
-	var val interface{}
-	tr(func(_ interface{}, input interface{}) interface{} {
-		val = input
-		isChanged = true
-		return nil
-	})(nil, s.Car())
-
-	if isChanged {
-		return Cons(
+	if val, ok := Step(tr, s.Car()); ok {
+		return Concat(
 			val,
 			func() Stream {
 				return Sequence(tr, s.Cdr())

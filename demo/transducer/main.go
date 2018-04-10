@@ -154,7 +154,7 @@ func main() {
 		mapcatting(twins),
 		is.From(10, 20, 30),
 	)
-	displayLine(mapcat, 20)
+	displayLine(mapcat.(is.Stream), 20)
 
 	fmt.Println("taking")
 	taken := is.Sequence(

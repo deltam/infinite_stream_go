@@ -122,6 +122,79 @@ func TestReduce(t *testing.T) {
 	}
 }
 
+func TestStep(t *testing.T) {
+	// map
+	mt := Map(func(input interface{}) interface{} {
+		if n, ok := input.(int); ok {
+			return n * n
+		}
+		return input
+	})
+	mv1, mChanged1 := Step(mt, 5)
+	if mChanged1 != true {
+		t.Error("mChanged1 is false, want true")
+	}
+	if mv1.Car() != 5*5 {
+		t.Errorf("mv1.Car() = %v, want 25", mv1)
+	}
+	if mv1.Cdr().IsTail() != true {
+		t.Error("mv1.Cdr().IsTail() is false, want true")
+	}
+	mv2, mChanged2 := Step(mt, 9)
+	if mChanged2 != true {
+		t.Error("mChanged2 is false, want true")
+	}
+	if mv2.Car() != 9*9 {
+		t.Errorf("mv2.Car() = %v, want 81", mv2)
+	}
+	if mv2.Cdr().IsTail() != true {
+		t.Error("mv2.Cdr().IsTail() is false, want true")
+	}
+
+	// filter
+	ft := Filter(func(input interface{}) bool {
+		if n, ok := input.(int); ok {
+			return n%2 == 0
+		}
+		return false
+	})
+	_, fChanged1 := Step(ft, 1)
+	if fChanged1 != false {
+		t.Error("fChanged1 is true, want false")
+	}
+	fv1, fChanged4 := Step(ft, 2)
+	if fChanged4 != true {
+		t.Error("fChanged4 is false, want true")
+	}
+	if fv1.Car() != 2 {
+		t.Errorf("fv1.Car() = %v, want 2", fv1)
+	}
+	if fv1.Cdr().IsTail() != true {
+		t.Error("fv1.Cdr().IsTail() is false, want true")
+	}
+
+	// mapcat
+	mct := func(reducing Reducer) Reducer {
+		return func(result interface{}, input interface{}) interface{} {
+			v := From(input, input) // twins
+			return Reduce(reducing, result, v)
+		}
+	}
+	mctv1, mctOk1 := Step(mct, 3)
+	if !mctOk1 {
+		t.Error("mctOk1 is false, want true")
+	}
+	if mctv1.Car() != 3 {
+		t.Errorf("mctv1.Car() = %v, want 3", mctv1.Car())
+	}
+	if mctv1.Cdr().Car() != 3 {
+		t.Errorf("mctv1.Cdr().Car() = %v, want 3", mctv1.Cdr().Car())
+	}
+	if mctv1.Cdr().Cdr().IsTail() != true {
+		t.Error("mctv1.Cdr().Cdr().IsTail() is false, want true")
+	}
+}
+
 func TestSequence(t *testing.T) {
 	ns := integerStartFrom(1)
 
