@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 
 	is "github.com/deltam/infinite_stream_go"
 )
@@ -9,7 +10,7 @@ import (
 func displayLine(s is.Stream, limit int) {
 	cur := s
 	for i := 0; i < limit; i++ {
-		fmt.Printf("%d ", cur.Car())
+		fmt.Printf("%v ", cur.Car())
 		cur = cur.Cdr()
 		if cur.IsTail() {
 			break
@@ -53,6 +54,25 @@ func sieve(s is.Stream) is.Stream {
 	)
 }
 
+func fibs(a1 int, a2 int) is.Stream {
+	return is.Cons(
+		a1,
+		func() is.Stream {
+			return fibs(a2, a1+a2)
+		},
+	)
+}
+
+func rootStream(n float64, apx float64) is.Stream {
+	next := apx - ((apx*apx - n) / (n * apx))
+	return is.Cons(
+		next,
+		func() is.Stream {
+			return rootStream(n, next)
+		},
+	)
+}
+
 func main() {
 	fmt.Println("natural numbers")
 	ns := integerStartFrom(1)
@@ -69,5 +89,15 @@ func main() {
 	nsFrom2 := integerStartFrom(2)
 	primes := sieve(nsFrom2)
 	displayLine(primes, 20)
-	fmt.Printf("prime 1000th: %d\n", is.Ref(1000, primes))
+	fmt.Printf("prime 1000th: %d\n\n", is.Ref(1000, primes))
+
+	fmt.Println("fibonacci")
+	fib := fibs(0, 1)
+	displayLine(fib, 20)
+
+	fmt.Println("root 2")
+	root5 := rootStream(5.0, 2.0)
+	displayLine(root5, 20)
+	fmt.Printf("math.Sqrt(5):   %v\n", math.Sqrt(5))
+	fmt.Printf("root 5(Stream): %v\n", is.Ref(30, root5))
 }
