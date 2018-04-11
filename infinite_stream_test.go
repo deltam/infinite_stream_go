@@ -124,6 +124,96 @@ func TestReduce(t *testing.T) {
 	}
 }
 
+func TestMap(t *testing.T) {
+	three := From(1, 2, 3)
+
+	// inc
+	mapInc := Map(func(input interface{}) interface{} {
+		if n, ok := input.(int); ok {
+			return n + 1
+		}
+		return input
+	})
+	mapped1 := Reduce(mapInc(ConjReducer), Empty(), three)
+	if s, ok := mapped1.(Stream); !ok {
+		t.Errorf("mapped1 is %v, want Stream", mapped1)
+	} else {
+		if Ref(0, s) != 1+1 {
+			t.Errorf("Ref(0, mapped1) = %v, want 2", Ref(0, s))
+		}
+		if Ref(1, s) != 2+1 {
+			t.Errorf("Ref(1, mapped1) = %v, want 3", Ref(1, s))
+		}
+		if Ref(2, s) != 3+1 {
+			t.Errorf("Ref(2, mapped1) = %v, want 4", Ref(2, s))
+		}
+	}
+
+	// square
+	mapSquare := Map(func(input interface{}) interface{} {
+		if n, ok := input.(int); ok {
+			return n * n
+		}
+		return input
+	})
+	mapped2 := Reduce(mapSquare(ConjReducer), Empty(), three)
+	if s, ok := mapped2.(Stream); !ok {
+		t.Errorf("mapped2 is %v, want Stream", mapped2)
+	} else {
+		if Ref(0, s) != 1*1 {
+			t.Errorf("Ref(0, mapped2) = %v, want 1", Ref(0, s))
+		}
+		if Ref(1, s) != 2*2 {
+			t.Errorf("Ref(1, mapped2) = %v, want 4", Ref(1, s))
+		}
+		if Ref(2, s) != 3*3 {
+			t.Errorf("Ref(2, mapped2) = %v, want 9", Ref(2, s))
+		}
+	}
+}
+
+func TestFilter(t *testing.T) {
+	five := From(1, 2, 3, 4, 5)
+
+	// even
+	filterEven := Filter(func(input interface{}) bool {
+		if n, ok := input.(int); ok {
+			return n%2 == 0
+		}
+		return false
+	})
+	filtered1 := Reduce(filterEven(ConjReducer), Empty(), five)
+	if s, ok := filtered1.(Stream); !ok {
+		t.Errorf("filtered1 is %v, want Stream", filtered1)
+	} else {
+		if tmp := s.Car(); tmp != 2 {
+			t.Errorf("s.Car() = %v, want 2", tmp)
+		}
+		if tmp := s.Cdr().Car(); tmp != 4 {
+			t.Errorf("s.Cdr().Car() = %v, want 4", tmp)
+		}
+		if s.Cdr().Cdr().IsTail() != true {
+			t.Error("s.Cdr().Cdr().IsTail() is false, want true")
+		}
+	}
+
+	// more than 10
+	filterMore := Filter(func(input interface{}) bool {
+		if n, ok := input.(int); ok {
+			return n > 10
+		}
+		return false
+	})
+	filtered2 := Reduce(filterMore(ConjReducer), Empty(), five)
+	if s, ok := filtered2.(Stream); !ok {
+		t.Errorf("filtered2 is %v, want Stream", filtered2)
+	} else {
+		if s.IsTail() != true {
+			t.Error("s.IsTail() is false, want true")
+		}
+	}
+}
+
 func TestStep(t *testing.T) {
 	// map
 	mt := Map(func(input interface{}) interface{} {
