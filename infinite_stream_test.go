@@ -45,15 +45,17 @@ func TestFrom(t *testing.T) {
 func TestRef(t *testing.T) {
 	ns := integerStartFrom(1)
 	if Ref(0, ns) != 1 {
-		t.Errorf("Ref(ns, 0) = %v, want 1", Ref(0, ns))
+		t.Errorf("Ref(0, ns) = %v, want 1", Ref(0, ns))
 	}
 	if Ref(1, ns) != 2 {
-		t.Errorf("ns.Ref(1) = %v, want 2", Ref(1, ns))
+		t.Errorf("Ref(1, ns) = %v, want 2", Ref(1, ns))
 	}
 	if Ref(99, ns) != 100 {
-		t.Errorf("Ref(ns,99) = %v, want 100", Ref(99, ns))
+		t.Errorf("Ref(99, ns) = %v, want 100", Ref(99, ns))
 	}
-
+	if Ref(-1, ns) != nil {
+		t.Errorf("Ref(-1, ns) = %v, want nil", Ref(-1, ns))
+	}
 }
 
 func TestTake(t *testing.T) {

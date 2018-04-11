@@ -85,6 +85,10 @@ func From(items ...interface{}) Stream {
 }
 
 func Ref(n int, s Stream) interface{} {
+	if s.IsTail() || n < 0 {
+		return nil
+	}
+
 	if n == 0 {
 		return s.Car()
 	} else {
