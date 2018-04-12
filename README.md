@@ -1,6 +1,6 @@
 # infinite_stream_go
 
-SICP like infinte stream & transducer for Go.
+SICP like infinite stream & transducer for Go.
 
 ## Demo
 
